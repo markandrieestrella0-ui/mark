@@ -1,1 +1,273 @@
 # mark
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Activity 7 - Pagination</title>
+    <link rel="icon" href="ACDC.PNG" type="image/png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; color: white; }
+
+        /* NAV */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            background: rgba(164, 17, 7, 0.85); backdrop-filter: blur(8px);
+            display: flex; gap: 6px; padding: 15px 25px;
+            flex-wrap: wrap; border-bottom: 1px solid #c4ce0c33;
+        }
+        nav a {
+            color: #e86017; text-decoration: none; font-size: 13px;
+            font-weight: bold; padding: 6px 14px;
+            border: 1px solid #aaa; border-radius: 20px;
+            transition: background 0.3s, color 0.3s;
+        }
+        nav a:hover { background: #e86017; color: #000; }
+
+        /* LOGIN GATE */
+        #login-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background: linear-gradient(135deg, #0d0d0d, #1a1a2e);
+            display: flex; align-items: center; justify-content: center;
+        }
+        #main-content { display: none; }
+        .login-box {
+            background: rgba(255,255,255,0.05); border: 1px solid #e86017;
+            border-radius: 16px; padding: 40px; width: 360px;
+            text-align: center; box-shadow: 0 0 30px #00e5ff22;
+        }
+        .login-box h1 { font-size: 24px; margin-bottom: 6px; color: #e86017; text-shadow: 0 0 10px #e86017; }
+        .login-box p { color: #aaa; font-size: 13px; margin-bottom: 24px; }
+        .login-box input {
+            width: 100%; padding: 12px 16px; margin-bottom: 14px;
+            border-radius: 8px; border: 1px solid #e8ab31;
+            background: rgba(255,255,255,0.07); color: white;
+            font-size: 14px; outline: none; transition: border 0.3s;
+        }
+        .login-box input:focus { border-color: #e86017; }
+        .login-box button {
+            width: 100%; padding: 12px; background: #e86017; color: #000;
+            font-weight: bold; font-size: 15px; border: none;
+            border-radius: 8px; cursor: pointer;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .login-box button:hover { background: #e86017; box-shadow: 0 0 16px #e86017; }
+        .login-box .link { margin-top: 16px; font-size: 13px; color: #aaa; }
+        .login-box .link a { color: #eaf6f8; text-decoration: none; }
+        .error-msg { color: #e86017; font-size: 13px; margin-bottom: 10px; display: none; }
+
+        /* ALL PAGES HIDDEN BY DEFAULT */
+        .page { display: none; }
+
+        /* PAGE 1 - HERO */
+        #page1 {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0a0a1a 0%, #001a1a 100%);
+            align-items: center; justify-content: center;
+            text-align: center; position: relative; overflow: hidden;
+        }
+        #page1::before {
+            content: ''; position: absolute; width: 600px; height: 600px;
+            background: radial-gradient(circle, #00e5ff22 0%, transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .hero { position: relative; max-width: 700px; padding: 40px 20px; }
+        .hero-tag { font-size: 12px; letter-spacing: 4px; color: #e86017; text-transform: uppercase; margin-bottom: 16px; }
+        .hero-title { font-size: clamp(36px, 6vw, 72px); font-weight: 900; line-height: 1.1; margin-bottom: 20px; text-shadow: 0 0 40px #e0671644; }
+        .hero-title span { color: #e86017; }
+        .hero-sub { font-size: 16px; color: #aaa; line-height: 1.7; margin-bottom: 36px; }
+        .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+        .btn-primary { padding: 14px 32px; background: #e86017; color: #000; font-weight: bold; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s, box-shadow 0.3s; }
+        .btn-primary:hover { background: #e86017; box-shadow: 0 0 20px #e86017; }
+        .btn-outline { padding: 14px 32px; background: transparent; color: #e86017; font-weight: bold; font-size: 15px; border: 2px solid #e86017; border-radius: 8px; cursor: pointer; transition: background 0.3s, color 0.3s; }
+        .btn-outline:hover { background: #e86017; color: #000; }
+
+        /* PAGE 2 - ACT 4 */
+        #page2 {
+            min-height: 100vh;
+            background: url('ACDC.png') no-repeat center center / cover;
+            position: relative; padding: 60px 40px;
+        }
+        #page2::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.6); pointer-events: none; }
+        #page2 .playlist-bar, #page2 .audio-box { position: relative; }
+        .playlist-bar { overflow: hidden; white-space: nowrap; padding: 15px 0; margin-bottom: 30px; }
+        .scroll-text { display: inline-block; color: #e86017; font-size: 20px; font-weight: bold; padding-left: 100%; animation: scrolling 20s linear infinite; text-shadow: 0 0 8px #e86017, 0 0 20px #e86017, 0 0 40px #e86017; }
+        @keyframes scrolling { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
+        .audio-box { text-align: center; }
+        .soft2-title { font-size: 28px; color: Red; margin-bottom: 16px; transition: color 0.3s; cursor: default; }
+        .soft2-title:hover { color: #e86017; }
+        .gif-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 14px; }
+        .gif { width: 50px; height: 50px; }
+        .gif-label { color: white; font-size: 18px; font-weight: bold; }
+
+        /* PAGE 3 - ACT 2 */
+        #page3 { min-height: 100vh; background: #111; padding: 60px 40px; }
+        .section-title { font-size: 13px; letter-spacing: 3px; color: #e86017; text-transform: uppercase; margin-bottom: 30px; }
+        .btn-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+        .uberbutton { background-color: #000; border: none; color: white; padding: 15px 32px; font-size: 16px; cursor: pointer; }
+        .amazonbutton { background-color: rgb(69, 33, 210); border: none; color: #000; padding: 15px 32px; font-size: 16px; width: 200px; border-radius: 49px; cursor: pointer; }
+        .githubbutton { background-color: rgb(46,164,79); border: none; color: white; padding: 15px 32px; font-size: 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .bootstrapbutton { background-color: rgb(121,82,179); border: none; color: white; padding: 15px 32px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .bootstrap2button { background-color: white; border: 1px solid rgb(108,117,125); color: rgb(108,117,125); padding: 15px 32px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .linkedinbutton { background-color: rgb(194, 10, 50); border: none; color: white; padding: 15px 32px; font-size: 16px; font-weight: bold; border-radius: 49px; cursor: pointer; }
+        .linkedin2button { background-color: white; border: 1px solid rgb(194, 10, 50); color: rgb(194, 10, 50); padding: 15px 32px; font-size: 16px; font-weight: bold; border-radius: 49px; cursor: pointer; }
+
+        /* PAGE 4 - ACT 3 */
+        #page4 { min-height: 100vh; background: #646464; padding: 60px 40px; }
+        #page4 .section-title { color: #00a0b0; }
+        #page4 .uberbutton:hover { background-color: rgba(0,0,0,0.5); transition: background-color 0.5s ease; }
+        #page4 .amazonbutton:hover { background-color: rgb(207,178,31); transition: background-color 0.5s ease; }
+        #page4 .githubbutton:hover { box-shadow: 0px 4px 8px rgba(0,0,0,0.3); transition: box-shadow 0.5s ease; }
+        #page4 .bootstrapbutton:hover { background-color: rgb(75,44,124); transition: background-color 0.5s ease; }
+        #page4 .bootstrap2button:hover { background-color: rgb(108,117,125); color: white; transition: background-color 0.5s ease; }
+        #page4 .linkedinbutton:hover { background-color: rgb(19,82,146); transition: background-color 0.5s ease; }
+        #page4 .linkedin2button:hover { background-color: rgb(76,159,243); border: 3px solid rgb(10,102,194); color: white; }
+
+        /* PAGINATION BAR */
+        .pagination-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);
+            border-top: 1px solid #e86017;
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 12px;
+        }
+        .page-btn {
+            width: 42px; height: 42px; background: transparent;
+            border: 1px solid #e8ab31; color: #e86017;
+            font-size: 14px; font-weight: bold; border-radius: 8px;
+            cursor: pointer; transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+        .page-btn:hover, .page-btn.active { background: #e86017; color: #000; box-shadow: 0 0 12px
+         #e8ab31; }
+        .page-btn.prev-next { width: auto; padding: 0 16px; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="login-screen">
+    <div class="login-box">
+        <h1>LETS ROCK AND ROLL </h1>
+        <p>Sign in to your account</p>
+        <div class="error-msg" id="error-msg">Please fill in all fields.</div>
+        <input type="text" id="username" placeholder="Username or Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="doLogin()">Login</button>
+        <div class="link">Don't have an account? <a href="#">Sign up</a></div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+
+<nav>
+    <a href="#" onclick="goTo(1);return false;">Act 5 - Hero</a>
+    <a href="#" onclick="goTo(2);return false;">Act 4 - Image & Audio</a>
+    <a href="#" onclick="goTo(3);return false;">Act 2 - CSS Basic</a>
+    <a href="#" onclick="goTo(4);return false;">Act 3 - Hover & Shadow</a>
+</nav>
+
+<!-- PAGE 1: ACT 5 HERO -->
+<div class="page" id="page1">
+    <div class="hero">
+        <p class="hero-tag">✦ Now Playing THE ROCK</p>
+        <h1 class="hero-title">Discover the <span>Sound</span><br>of ACDC</h1>
+        <p class="hero-sub">the legendary rock band that has become an iconic force in the music industry.</p>
+        <div class="hero-btns">
+            <button class="btn-primary">▶ Play Now</button>
+            <button class="btn-outline">Explore Albums</button>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 2: ACT 4 IMAGE FAVICON AUDIO -->
+<div class="page" id="page2">
+    <div class="playlist-bar">
+        <div class="scroll-text">🎵 AC/DC |Greatest Hits full album | The Best of AC/DC🎵</div>
+    </div>
+    <div class="audio-box">
+        <h2 class="soft2-title">SOFT 2 Album</h2>
+        <audio controls>
+            <source src="<audio controls src="AC_DC - Back In Black (Official Video)-1.mp3" title="Title"></audio>" type="audio/mpeg">
+        </audio>
+        <div class="gif-row">
+            <img class="gif" src="rocking.gif" alt="rocking gif">
+            <span class="gif-label">ACDC  Album</span>
+            <img class="gif" src="rocking.gif" alt="rocking gif">
+        </div>
+    </div>
+</div>
+
+<!-- PAGE 3: ACT 2 CSS BASIC -->
+<div class="page" id="page3">
+    <p class="section-title">#2 — CSS Basic Buttons</p>
+    <div class="btn-grid">
+        <button class="uberbutton">Request now</button>
+        <button class="amazonbutton">Add to cart</button>
+        <button class="githubbutton">Sign up</button>
+        <button class="bootstrapbutton">Get started</button>
+        <button class="bootstrap2button">Download</button>
+        <button class="linkedinbutton">Apply on company website</button>
+        <button class="linkedin2button">Save</button>
+    </div>
+</div>
+
+<!-- PAGE 4: ACT 3 HOVER SHADOW TRANSITION -->
+<div class="page" id="page4">
+    <p class="section-title">#3 — Hover, Shadow & Transition</p>
+    <div class="btn-grid">
+        <button class="uberbutton">Request now</button>
+        <button class="amazonbutton">Add to cart</button>
+        <button class="githubbutton">Sign up</button>
+        <button class="bootstrapbutton">Get started</button>
+        <button class="bootstrap2button">Download</button>
+        <button class="linkedinbutton">Apply on company website</button>
+        <button class="linkedin2button">Save</button>
+    </div>
+</div>
+
+<!-- PAGINATION BAR -->
+<div class="pagination-bar">
+    <button class="page-btn prev-next" onclick="changePage(-1)">&#8592; Prev</button>
+    <button class="page-btn" id="p1" onclick="goTo(1)">1</button>
+    <button class="page-btn" id="p2" onclick="goTo(2)">2</button>
+    <button class="page-btn" id="p3" onclick="goTo(3)">3</button>
+    <button class="page-btn" id="p4" onclick="goTo(4)">4</button>
+    <button class="page-btn prev-next" onclick="changePage(1)">Next &#8594;</button>
+</div>
+
+</div>
+
+<script>
+    function doLogin() {
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value.trim();
+        if (!u || !p) { document.getElementById('error-msg').style.display = 'block'; return; }
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        goTo(1);
+    }
+
+    let current = 0;
+
+    function goTo(n) {
+        if (current !== 0) {
+            document.getElementById('page' + current).style.display = 'none';
+            document.getElementById('p' + current).classList.remove('active');
+        }
+        current = n;
+        document.getElementById('p' + current).classList.add('active');
+        // page1 needs flex, others need block
+        document.getElementById('page' + current).style.display = (n === 1) ? 'flex' : 'block';
+        window.scrollTo(0, 0);
+    }
+
+    function changePage(dir) {
+        let next = current + dir;
+        if (next < 1 || next > 4) return;
+        goTo(next);
+    }
+</script>
+
+</body>
+</html>
